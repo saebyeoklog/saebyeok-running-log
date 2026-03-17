@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>SAEBYEOK RUN LOG</title>
+  <style>
+    :root {
+      --bg: #f6f7fb;
+      --card: #ffffff;
+      --text: #1f2937;
+      --muted: #6b7280;
+      --line: #e5e7eb;
+      --accent: #111827;
+      --accent2: #374151;
+      --danger: #b91c1c;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    .wrap {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+    .sub { color: var(--muted); margin: 0; }
+    .topbar {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .btn, button {
+      border: 0;
+      border-radius: 12px;
+      padding: 10px 14px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .btn.secondary, button.secondary {
+      background: white;
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+    .btn.danger, button.danger {
+      background: white;
+      color: var(--danger);
+      border: 1px solid #fecaca;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+      gap: 12px;
+    }
+    .stat .label { color: var(--muted); font-size: 13px; }
+    .stat .value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+    .tabs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .tab {
+      background: white;
+      border: 1px solid var(--line);
+      color: var(--text);
+    }
+    .tab.active {
+      background: var(--accent);
+      color: white;
+    }
+    .hidden { display: none; }
+    .grid {
+      display: grid;
+      gap: 12px;
+    }
+    .grid.cols-2 { grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
+    .grid.cols-4 { grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      font-size: 14px;
+      background: white;
+    }
+    textarea { min-height: 110px; resize: vertical; }
+    .log {
+      border: 1px solid var(--line);
+      border-radius: 16px;
+      padding: 14px;
+      margin-bottom: 12px;
+      background: #fff;
+    }
+    .log-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      align-items: start;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin: 6px 0; }
+    .badge {
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      color: var(--accent2);
+      background: #f9fafb;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 14px;
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+    .section-title {
+      margin: 0 0 10px;
+      font-size: 18px;
+    }
+    .stats-list p { margin: 8px 0; }
+    .footer-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1>새벽 러닝로그</h1>
+          <p class="sub">SAEBYEOK RUN LOG · 휴대폰에서 바로 쓰는 개인 러닝 기록앱</p>
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="secondary" onclick="downloadCSV()">CSV 다운로드</button>
+          <button class="secondary" onclick="document.getElementById('csvImport').click()">CSV 가져오기</button>
+          <input id="csvImport" type="file" accept=".csv" class="hidden" />
+        </div>
+      </div>
+    </div>
+
+    <div class="stats" id="statCards"></div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="today">오늘 기록</button>
+      <button class="tab" data-tab="logs">기록 보기</button>
+      <button class="tab" data-tab="stats">통계</button>
+    </div>
+
+    <div id="today" class="tab-panel">
+      <div class="card">
+        <h2 class="section-title" id="formTitle">오늘 기록 입력</h2>
+        <div class="grid cols-4">
+          <div><label>날짜</label><input type="date" id="date"></div>
+          <div><label>체중 (kg)</label><input id="weight" placeholder="69.8"></div>
+          <div><label>수면시간 (시간)</label><input id="sleepHours" placeholder="6.5"></div>
+          <div>
+            <label>훈련종류</label>
+            <select id="trainingType"></select>
+          </div>
+        </div>
+
+        <div class="grid cols-4" style="margin-top:12px;">
+          <div><label>러닝화</label><input id="shoe" placeholder="예: 알파플라이 3"></div>
+          <div>
+            <label>훈련장소</label>
+            <select id="location"></select>
+          </div>
+          <div id="customLocationWrap" class="hidden"><label>직접 입력 장소</label><input id="customLocation"></div>
+          <div><label>거리 (km)</label><input id="distance" placeholder="10"></div>
+          <div><label>시간 (mm:ss 또는 hh:mm:ss)</label><input id="duration" placeholder="56:20"></div>
+          <div><label>페이스</label><input id="pace" placeholder="자동 계산 또는 직접 입력"></div>
+        </div>
+
+        <div class="grid cols-2" style="margin-top:12px;">
+          <div>
+            <label>근력운동</label>
+            <textarea id="strength" placeholder="스쿼트 3×15&#10;플랭크 3×1분"></textarea>
+          </div>
+          <div class="grid cols-2">
+            <div>
+              <label>컨디션</label>
+              <select id="condition"></select>
+            </div>
+            <div>
+              <label>통증 / 불편 부위</label>
+              <input id="pain" placeholder="왼쪽 종아리 약간 뻐근">
+            </div>
+            <div style="grid-column: 1 / -1;">
+              <label>메모</label>
+              <textarea id="memo" placeholder="해피러닝 후배들과 조깅&#10;초반 몸이 무거웠지만 후반 좋아짐"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;">
+          <button onclick="saveLog()">기록 저장</button>
+          <button class="secondary" onclick="resetForm()">새로 입력</button>
+        </div>
+        <p class="footer-note">빠른 입력 팁: 뛰고 나서 훈련종류 · 거리 · 시간만 먼저 입력하고, 집에 와서 체중 · 수면 · 메모를 보완해도 됩니다.</p>
+      </div>
+    </div>
+
+    <div id="logs" class="tab-panel hidden">
+      <div class="card">
+        <label>검색</label>
+        <input id="query" placeholder="날짜, 장소, 훈련종류, 메모 검색">
+      </div>
+      <div id="logList"></div>
+    </div>
+
+    <div id="stats" class="tab-panel hidden">
+      <div class="card stats-list" id="statsText"></div>
+      <div class="card">
+        <h2 class="section-title">월별 거리</h2>
+        <div id="monthlyList"></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">체중 변화</h2>
+        <div id="weightList"></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">최근 페이스</h2>
+        <div id="paceList"></div>
+      </div>
+    </div>
+  </div>
+
+<script>
+const STORAGE_KEY = "saebyeok-running-log-v2";
+const TRAINING_TYPES = ["화달","목달","토훈","일달","개인훈련","풀코스","하프","근력","휴식"];
+const CONDITION_TYPES = ["좋음","보통","나쁨"];
+const LOCATIONS = ["중랑천","망우언덕","초안산","무수골","남산","과기대 트랙","의정부종합운동장","헬스장","기타"];
+const DISTANCE_PRESETS = { "풀코스": "42.195", "하프": "21.0975" };
+
+let editingId = "";
+
+function todayStr() {
+  const d = new Date();
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth()+1).padStart(2,'0');
+  const dd = String(d.getDate()).padStart(2,'0');
+  return `${yyyy}-${mm}-${dd}`;
+}
+
+function fillOptions() {
+  const t = document.getElementById("trainingType");
+  TRAINING_TYPES.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    t.appendChild(o);
+  });
+  t.value = "개인훈련";
+
+  const c = document.getElementById("condition");
+  CONDITION_TYPES.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    c.appendChild(o);
+  });
+  c.value = "보통";
+
+  const l = document.getElementById("location");
+  LOCATIONS.forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    l.appendChild(o);
+  });
+  l.value = "중랑천";
+}
+
+function getLogs() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
+  } catch(e) {
+    return [];
+  }
+}
+function setLogs(logs) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(logs));
+}
+
+function monthKey(date) { return date.slice(0,7); }
+function yearKey(date) { return date.slice(0,4); }
+
+function parseMinutesPerKm(pace) {
+  if (!pace || !pace.includes(":")) return null;
+  const m = pace.match(/^(\d+):(\d{2})/);
+  if (!m) return null;
+  return Number(m[1]) + Number(m[2])/60;
+}
+function formatPaceFromDuration(distance, duration) {
+  const d = parseFloat(distance);
+  if (!d || !duration) return "";
+  const parts = duration.split(":").map(Number);
+  if (parts.some(Number.isNaN)) return "";
+  let totalSeconds = 0;
+  if (parts.length === 2) totalSeconds = parts[0]*60 + parts[1];
+  else if (parts.length === 3) totalSeconds = parts[0]*3600 + parts[1]*60 + parts[2];
+  else return "";
+  const secPerKm = totalSeconds / d;
+  const min = Math.floor(secPerKm/60);
+  const sec = String(Math.round(secPerKm%60)).padStart(2,"0");
+  return `${min}:${sec}/km`;
+}
+
+function readForm() {
+  const trainingType = el("trainingType").value;
+  const location = el("location").value === "기타" ? el("customLocation").value : el("location").value;
+  return {
+    id: editingId || String(Date.now()),
+    date: el("date").value,
+    weight: el("weight").value,
+    sleepHours: el("sleepHours").value,
+    trainingType,
+    shoe: el("shoe").value,
+    location,
+    customLocation: el("customLocation").value,
+    distance: el("distance").value,
+    duration: el("duration").value,
+    pace: el("pace").value,
+    strength: el("strength").value,
+    condition: el("condition").value,
+    pain: el("pain").value,
+    memo: el("memo").value
+  };
+}
+function writeForm(log) {
+  editingId = log.id || "";
+  el("date").value = log.date || todayStr();
+  el("weight").value = log.weight || "";
+  el("sleepHours").value = log.sleepHours || "";
+  el("trainingType").value = log.trainingType || "개인훈련";
+  el("shoe").value = log.shoe || "";
+  if (LOCATIONS.includes(log.location)) {
+    el("location").value = log.location || "중랑천";
+    el("customLocation").value = "";
+  } else {
+    el("location").value = "기타";
+    el("customLocation").value = log.location || "";
+  }
+  toggleCustomLocation();
+  el("distance").value = log.distance || "";
+  el("duration").value = log.duration || "";
+  el("pace").value = log.pace || "";
+  el("strength").value = log.strength || "";
+  el("condition").value = log.condition || "보통";
+  el("pain").value = log.pain || "";
+  el("memo").value = log.memo || "";
+  el("formTitle").textContent = editingId ? "기록 수정" : "오늘 기록 입력";
+}
+function resetForm() {
+  editingId = "";
+  writeForm({ date: todayStr(), trainingType: "개인훈련", location: "중랑천", condition: "보통" });
+}
+
+function saveLog() {
+  const log = readForm();
+  if (!log.date || !log.trainingType) {
+    alert("날짜와 훈련종류를 입력해 주세요.");
+    return;
+  }
+  let logs = getLogs();
+  const idx = logs.findIndex(x => x.id === log.id);
+  if (idx >= 0) logs[idx] = log;
+  else logs.unshift(log);
+  setLogs(logs);
+  resetForm();
+  renderAll();
+  activateTab("logs");
+}
+
+function editLog(id) {
+  const logs = getLogs();
+  const log = logs.find(x => x.id === id);
+  if (!log) return;
+  writeForm(log);
+  activateTab("today");
+}
+
+function deleteLog(id) {
+  if (!confirm("이 기록을 삭제할까요?")) return;
+  let logs = getLogs().filter(x => x.id !== id);
+  setLogs(logs);
+  renderAll();
+}
+
+function downloadCSV() {
+  const logs = getLogs().slice().sort((a,b)=>a.date < b.date ? 1 : -1);
+  const headers = ["날짜","체중(kg)","수면시간","장소","훈련종류","러닝화","거리(km)","시간","페이스","근력운동","컨디션","통증","메모"];
+  const rows = logs.map(r => [
+    r.date || "",
+    r.weight || "",
+    r.sleepHours || "",
+    r.location || "",
+    r.trainingType || "",
+    r.shoe || "",
+    r.distance || "",
+    r.duration || "",
+    r.pace || "",
+    (r.strength || "").replace(/\n/g," / "),
+    r.condition || "",
+    r.pain || "",
+    (r.memo || "").replace(/\n/g," / ")
+  ]);
+  const csv = [headers, ...rows]
+    .map(arr => arr.map(v => `"${String(v).replace(/"/g,'""')}"`).join(","))
+    .join("\n");
+  const blob = new Blob(["\ufeff" + csv], {type:"text/csv;charset=utf-8;"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `saebyeok-running-log-${todayStr()}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importCSVText(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return;
+  const rows = lines.map(parseCsvLine);
+  rows.shift(); // header
+  const imported = rows
+    .filter(r => r.length >= 13)
+    .map(r => ({
+      id: String(Date.now()) + Math.random().toString(36).slice(2,8),
+      date: r[0] || "",
+      weight: r[1] || "",
+      sleepHours: r[2] || "",
+      location: r[3] || "",
+      trainingType: r[4] || "개인훈련",
+      shoe: r[5] || "",
+      distance: r[6] || "",
+      duration: r[7] || "",
+      pace: r[8] || "",
+      strength: (r[9] || "").replace(/ \/ /g,"\n"),
+      condition: r[10] || "보통",
+      pain: r[11] || "",
+      memo: (r[12] || "").replace(/ \/ /g,"\n")
+    }));
+  const logs = getLogs();
+  setLogs([...imported, ...logs]);
+  renderAll();
+  alert("CSV 가져오기가 완료되었습니다.");
+}
+
+function parseCsvLine(line) {
+  const result = [];
+  let current = "";
+  let inQuotes = false;
+  for (let i=0; i<line.length; i++) {
+    const ch = line[i];
+    const next = line[i+1];
+    if (ch === '"' && inQuotes && next === '"') {
+      current += '"'; i++;
+    } else if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === ',' && !inQuotes) {
+      result.push(current);
+      current = "";
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current);
+  return result;
+}
+
+function renderStatsCards() {
+  const logs = getLogs();
+  const running = logs.filter(l => parseFloat(l.distance) > 0);
+  const now = todayStr();
+  const currentMonth = monthKey(now);
+  const currentYear = yearKey(now);
+  const totalDistance = running.reduce((s,l)=>s+(parseFloat(l.distance)||0),0);
+  const monthDistance = running.filter(l=>monthKey(l.date)===currentMonth).reduce((s,l)=>s+(parseFloat(l.distance)||0),0);
+  const yearDistance = running.filter(l=>yearKey(l.date)===currentYear).reduce((s,l)=>s+(parseFloat(l.distance)||0),0);
+  const strengthCount = logs.filter(l => (l.strength||"").trim()).length;
+  const jungnangDistance = running.filter(l => (l.location||"").includes("중랑천")).reduce((s,l)=>s+(parseFloat(l.distance)||0),0);
+
+  const items = [
+    ["이번 달 거리", `${monthDistance.toFixed(1)} km`],
+    ["올해 거리", `${yearDistance.toFixed(1)} km`],
+    ["총 누적 거리", `${totalDistance.toFixed(1)} km`],
+    ["중랑천 누적", `${jungnangDistance.toFixed(1)} km`],
+    ["근력 기록 횟수", `${strengthCount} 회`],
+  ];
+
+  const box = document.getElementById("statCards");
+  box.innerHTML = items.map(([a,b]) => `
+    <div class="card stat">
+      <div class="label">${a}</div>
+      <div class="value">${b}</div>
+    </div>
+  `).join("");
+
+  document.getElementById("statsText").innerHTML = `
+    <p><strong>이번 달 거리</strong>: ${monthDistance.toFixed(1)} km</p>
+    <p><strong>올해 거리</strong>: ${yearDistance.toFixed(1)} km</p>
+    <p><strong>총 누적 거리</strong>: ${totalDistance.toFixed(1)} km</p>
+    <p><strong>중랑천 누적 거리</strong>: ${jungnangDistance.toFixed(1)} km</p>
+    <p><strong>근력 기록 횟수</strong>: ${strengthCount} 회</p>
+  `;
+
+  const monthly = {};
+  running.forEach(l => {
+    const k = monthKey(l.date);
+    monthly[k] = (monthly[k] || 0) + (parseFloat(l.distance) || 0);
+  });
+  const monthlyEntries = Object.entries(monthly).sort((a,b)=>a[0]>b[0]?1:-1).slice(-12);
+  document.getElementById("monthlyList").innerHTML = monthlyEntries.length
+    ? monthlyEntries.map(([m,d]) => `<p>${m} · ${d.toFixed(1)} km</p>`).join("")
+    : "<p>아직 기록이 없습니다.</p>";
+
+  const weights = logs.filter(l => l.weight).sort((a,b)=>a.date>b.date?1:-1).slice(-20);
+  document.getElementById("weightList").innerHTML = weights.length
+    ? weights.map(l => `<p>${l.date} · ${l.weight} kg</p>`).join("")
+    : "<p>아직 기록이 없습니다.</p>";
+
+  const paces = logs.filter(l => l.pace && parseFloat(l.distance)>0).sort((a,b)=>a.date>b.date?1:-1).slice(-20);
+  document.getElementById("paceList").innerHTML = paces.length
+    ? paces.map(l => `<p>${l.date} · ${l.pace}</p>`).join("")
+    : "<p>아직 기록이 없습니다.</p>";
+}
+
+function renderLogs() {
+  const logs = getLogs().slice().sort((a,b)=>a.date < b.date ? 1 : -1);
+  const q = (document.getElementById("query").value || "").trim().toLowerCase();
+  const filtered = !q ? logs : logs.filter(log =>
+    [log.date, log.location, log.trainingType, log.memo, log.pain, log.strength, log.shoe]
+      .join(" ")
+      .toLowerCase()
+      .includes(q)
+  );
+
+  const box = document.getElementById("logList");
+  if (!filtered.length) {
+    box.innerHTML = `<div class="card">기록이 아직 없습니다.</div>`;
+    return;
+  }
+  box.innerHTML = filtered.map(log => `
+    <div class="log">
+      <div class="log-head">
+        <div>
+          <div style="font-size:18px;font-weight:700;">${escapeHtml(log.date || "")}</div>
+          <div class="badges">
+            <span class="badge">${escapeHtml(log.trainingType || "")}</span>
+            <span class="badge">${escapeHtml(log.location || "")}</span>
+          </div>
+          <div class="meta">
+            ${log.shoe ? `<span>신발 ${escapeHtml(log.shoe)}</span>` : ""}
+            ${log.distance ? `<span>거리 ${escapeHtml(log.distance)}km</span>` : ""}
+            ${log.duration ? `<span>시간 ${escapeHtml(log.duration)}</span>` : ""}
+            ${log.pace ? `<span>페이스 ${escapeHtml(log.pace)}</span>` : ""}
+            ${log.weight ? `<span>체중 ${escapeHtml(log.weight)}kg</span>` : ""}
+            ${log.sleepHours ? `<span>수면 ${escapeHtml(log.sleepHours)}h</span>` : ""}
+          </div>
+          ${log.strength ? `<p><strong>근력운동</strong><br>${nl2br(escapeHtml(log.strength))}</p>` : ""}
+          ${log.pain ? `<p style="color:#b91c1c;">통증: ${escapeHtml(log.pain)}</p>` : ""}
+          ${log.memo ? `<p>${nl2br(escapeHtml(log.memo))}</p>` : ""}
+        </div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+          <button class="secondary" onclick="editLog('${log.id}')">수정</button>
+          <button class="danger" onclick="deleteLog('${log.id}')">삭제</button>
+        </div>
+      </div>
+    </div>
+  `).join("");
+}
+
+function nl2br(s) { return s.replace(/\n/g,"<br>"); }
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, function(m){
+    return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m];
+  });
+}
+
+function activateTab(name) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.toggle("active", t.dataset.tab === name));
+  document.querySelectorAll(".tab-panel").forEach(p => p.classList.toggle("hidden", p.id !== name));
+}
+
+function toggleCustomLocation() {
+  document.getElementById("customLocationWrap").classList.toggle("hidden", el("location").value !== "기타");
+}
+function applyDistancePreset() {
+  const t = el("trainingType").value;
+  if (DISTANCE_PRESETS[t]) {
+    el("distance").value = DISTANCE_PRESETS[t];
+    el("distance").disabled = true;
+  } else {
+    el("distance").disabled = false;
+  }
+}
+function autoPace() {
+  const computed = formatPaceFromDuration(el("distance").value, el("duration").value);
+  if (computed) el("pace").value = computed;
+}
+function renderAll() {
+  renderStatsCards();
+  renderLogs();
+}
+function el(id) { return document.getElementById(id); }
+
+document.addEventListener("DOMContentLoaded", () => {
+  fillOptions();
+  resetForm();
+  renderAll();
+
+  document.querySelectorAll(".tab").forEach(btn => {
+    btn.addEventListener("click", () => activateTab(btn.dataset.tab));
+  });
+  el("location").addEventListener("change", toggleCustomLocation);
+  el("trainingType").addEventListener("change", applyDistancePreset);
+  el("distance").addEventListener("input", autoPace);
+  el("duration").addEventListener("input", autoPace);
+  el("query").addEventListener("input", renderLogs);
+  el("csvImport").addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    file.text().then(importCSVText);
+    e.target.value = "";
+  });
+});
+</script>
+</body>
+</html>
