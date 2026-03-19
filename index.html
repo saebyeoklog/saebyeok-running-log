@@ -611,54 +611,122 @@
     }
 
     function importCSVText(text){
-      const lines = text.trim().split(/\r?\n/);
-      if(lines.length < 2){ alert("CSV 내용이 없습니다."); return; }
+      function importCSVText(text){
+  const lines = text.trim().split(/\r?\n/);
+  if(lines.length < 2){
+    alert("CSV 내용이 없습니다.");
+    return;
+  }
 
-      const rows = lines.map(parseCsvLine);
-      const header = rows.shift();
+  const rows = lines.map(parseCsvLine);
+  const header = rows.shift();
 
-      const trainings = [];
-      const races = [];
+  const trainings = [];
+  const races = [];
 
-      // 두 형식 모두 허용:
-      // 1) 구분,날짜,종류,장소/대회명...
-      // 2) 날짜,체중(kg),수면시간,장소,훈련종류...
-      const hasTypeColumn = header[0] === "구분";
+  const hasTypeColumn = header[0] === "구분";
 
-      rows.forEach(r=>{
-        if(hasTypeColumn){
-          if((r[0]||"") === "훈련"){
-            trainings.push({
-              id:String(Date.now())+Math.random().toString(36).slice(2,8),
-              date:r[1]||"",
-              trainingType:r[2]||"개인훈련",
-              location:r[3]||"",
-              distance:r[4]||"",
-              duration:r[5]||"",
-              pace:r[6]||"",
-              shoe:r[7]||"",
-              weight:r[8]||"",
-              sleepHours:r[9]||"",
-              memo:r[10]||"",
-              strength:r[11]||"",
-              condition:"보통",
-              pain:""
-            });
-          }else if((r[0]||"") === "대회"){
-            races.push({
-              id:String(Date.now())+Math.random().toString(36).slice(2,8),
-              date:r[1]||"",
-              raceType:r[2]||"풀코스",
-              raceName:r[3]||"",
-              distance:r[4]||"",
-              duration:r[5]||"",
-              pace:r[6]||"",
-              shoe:r[7]||"",
-              weight:r[8]||"",
-              isPB:r[9]||"아니오",
-              memo:r[10]||""
-            });
-          }
+  rows.forEach(r => {
+    if(hasTypeColumn){
+      if((r[0] || "") === "훈련"){
+        trainings.push({
+          id: String(Date.now()) + Math.random().toString(36).slice(2,8),
+          date: r[1] || "",
+          trainingType: r[2] || "개인훈련",
+          location: r[3] || "",
+          distance: r[4] || "",
+          duration: r[5] || "",
+          pace: r[6] || "",
+          shoe: r[7] || "",
+          weight: r[8] || "",
+          sleepHours: r[9] || "",
+          memo: r[10] || "",
+          strength: r[11] || "",
+          condition: "보통",
+          pain: ""
+        });
+      } else if((r[0] || "") === "대회"){
+        races.push({
+          id: String(Date.now()) + Math.random().toString(36).slice(2,8),
+          date: r[1] || "",
+          raceType: r[2] || "풀코스",
+          raceName: r[3] || "",
+          distance: r[4] || "",
+          duration: r[5] || "",
+          pace: r[6] || "",
+          shoe: r[7] || "",
+          weight: r[8] || "",
+          isPB: r[9] || "아니오",
+          memo: r[10] || ""
+        });
+      }
+    } else {
+      const place = r[3] || "";
+      const subtype = r[4] || "개인훈련";
+      const distance = r[5] || "";
+      const duration = r[6] || "";
+      const memo = r[12] || "";
+
+      if(place === "대회" || subtype === "풀코스" || subtype === "하프" || subtype === "10K" || subtype === "5K"){
+        races.push({
+          id: String(Date.now()) + Math.random().toString(36).slice(2,8),
+          date: r[0] || "",
+          raceType: subtype || "풀코스",
+          raceName: place === "대회" ? (memo.split("/")[0] || "대회기록").trim() : "대회기록",
+          distance: distance,
+          duration: duration,
+          pace: r[7] || "",
+          shoe: r[11] || "",
+          weight: r[1] || "",
+          isPB: memo.includes("PB") ? "예" : "아니오",
+          memo: memo
+        });
+      } else {
+        trainings.push({
+          id: String(Date.now()) + Math.random().toString(36).slice(2,8),
+          date: r[0] || "",
+          weight: r[1] || "",
+          sleepHours: r[2] || "",
+          location: r[3] || "",
+          trainingType: subtype,
+          distance: distance,
+          duration: duration,
+          pace: r[7] || "",
+          strength: r[8] || "",
+          condition: r[9] || "보통",
+          pain: r[10] || "",
+          shoe: r[11] || "",
+          memo: memo
+        });
+      }
+    }
+  });
+
+  if(trainings.length){
+    setTrainings([...trainings, ...getTrainings()]);
+  }
+
+  if(races.length){
+    const existing = getRaces();
+    const merged = [...races, ...existing];
+
+    const unique = [];
+    const seen = new Set();
+
+    merged.forEach(r => {
+      const key = `${r.date}-${r.raceName}-${r.duration}`;
+      if(!seen.has(key)){
+        seen.add(key);
+        unique.push(r);
+      }
+    });
+
+    setRaces(unique);
+  }
+
+  renderAll();
+  alert(`가져오기 완료: 훈련 ${trainings.length}개, 대회 ${races.length}개`);
+}
         }else{
           // 날짜,체중(kg),수면시간,장소,훈련종류,거리(km),시간,페이스,근력운동,컨디션,통증,러닝화,메모
           const place = r[3] || "";
