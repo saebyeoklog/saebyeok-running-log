@@ -33,6 +33,11 @@ button.danger{background:#fff;color:#b91c1c;border:1px solid #fecaca}
 .stat{background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid var(--line);border-radius:22px;padding:16px}
 .stat .label{font-size:13px;color:var(--muted)}
 .stat .value{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:8px}
+.pb-highlight{margin-bottom:16px}
+.pb-card{background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid var(--line);border-radius:22px;padding:16px}
+.pb-title{font-size:13px;color:var(--muted)}
+.pb-value{font-size:24px;font-weight:800;letter-spacing:-.03em;margin-top:8px}
+.pb-meta{margin-top:6px;color:var(--muted);font-size:13px}
 .tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
 .tab{border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--text);padding:12px 14px;cursor:pointer;font-weight:800}
 .tab.active{background:var(--accent);color:#fff}
@@ -96,6 +101,8 @@ textarea{min-height:110px;resize:vertical}
   </div>
 
   <div class="stats" id="statCards"></div>
+
+  <div class="pb-highlight" id="pbHighlight"></div>
 
   <div class="tabs">
     <button class="tab active" data-tab="input">기록입력</button>
@@ -260,13 +267,86 @@ function fillOptions(){ENTRY_KINDS.forEach(v=>{let o1=document.createElement("op
 function updateEntryTypeOptions(){const target=el("entryType"); target.innerHTML=""; const items=(el("entryKind").value||"훈련")==="대회"?RACE_TYPES:TRAINING_TYPES; items.forEach(v=>{let o=document.createElement("option");o.value=v;o.textContent=v;target.appendChild(o);});}
 function resetEntryForm(){el("entryKind").value="훈련"; updateEntryTypeOptions(); el("entryDate").value=todayStr(); el("entryType").value="개인훈련"; el("entryTitle").value=""; el("entryDistance").value=""; el("entryDuration").value=""; el("entryPace").value=""; el("entryShoe").value=""; el("entryWeight").value=""; el("entrySleep").value=""; el("entryCondition").value="보통"; el("entryPain").value=""; el("entryStrength").value=""; el("entryMemo").value="";}
 function computeTodayStatus(){const today=todayStr(); const trainings=getTrainings().filter(v=>v.date===today); const races=getRaces().filter(v=>v.date===today); let hasRun=false, hasStrength=false; trainings.forEach(v=>{if(parseFloat(v.distance)>0) hasRun=true; if((v.strength||"").trim()||v.trainingType==="근력") hasStrength=true;}); races.forEach(v=>{if(parseFloat(v.distance)>0) hasRun=true;}); if(hasRun&&hasStrength) return "오늘 상태: 운동 · 러닝 + 근력"; if(hasRun) return "오늘 상태: 운동 · 러닝"; if(hasStrength) return "오늘 상태: 운동 · 근력"; return "오늘 상태: 휴식";}
-function renderTopStats(){const trainings=getTrainings(), races=getRaces(); const all=[...trainings,...races].map(v=>parseFloat(v.distance)||0); const total=all.reduce((a,b)=>a+b,0); const now=todayStr(); const month=[...trainings,...races].filter(v=>monthKey(v.date)===monthKey(now)).reduce((s,v)=>s+(parseFloat(v.distance)||0),0); const year=[...trainings,...races].filter(v=>yearKey(v.date)===yearKey(now)).reduce((s,v)=>s+(parseFloat(v.distance)||0),0); const full=races.filter(v=>v.raceType==="풀코스").length; el("todayStatus").textContent=computeTodayStatus(); el("statCards").innerHTML=`<div class="stat"><div class="label">이번 달 거리</div><div class="value">${month.toFixed(1)} km</div></div><div class="stat"><div class="label">연간 거리</div><div class="value">${year.toFixed(1)} km</div></div><div class="stat"><div class="label">누적 거리</div><div class="value">${total.toFixed(1)} km</div></div><div class="stat"><div class="label">대회 기록 수</div><div class="value">Full ${full}</div></div>`;}
+
+function bestRace(type){
+  const list=getRaces().filter(v=>v.raceType===type&&parseSeconds(v.duration)>0);
+  if(!list.length) return null;
+  return list.sort((a,b)=>parseSeconds(a.duration)-parseSeconds(b.duration))[0];
+}
+
+function renderTopStats(){
+  const trainings=getTrainings(), races=getRaces();
+  const all=[...trainings,...races].map(v=>parseFloat(v.distance)||0);
+  const total=all.reduce((a,b)=>a+b,0);
+  const now=todayStr();
+  const month=[...trainings,...races]
+    .filter(v=>monthKey(v.date)===monthKey(now))
+    .reduce((s,v)=>s+(parseFloat(v.distance)||0),0);
+  const year=[...trainings,...races]
+    .filter(v=>yearKey(v.date)===yearKey(now))
+    .reduce((s,v)=>s+(parseFloat(v.distance)||0),0);
+  const full=races.filter(v=>v.raceType==="풀코스").length;
+
+  el("todayStatus").textContent=computeTodayStatus();
+
+  el("statCards").innerHTML=`
+    <div class="stat"><div class="label">이번 달 거리</div><div class="value">${month.toFixed(1)} km</div></div>
+    <div class="stat"><div class="label">연간 거리</div><div class="value">${year.toFixed(1)} km</div></div>
+    <div class="stat"><div class="label">누적 거리</div><div class="value">${total.toFixed(1)} km</div></div>
+    <div class="stat"><div class="label">대회 기록 수</div><div class="value">Full ${full}</div></div>
+  `;
+
+  const pbFull = bestRace("풀코스");
+  el("pbHighlight").innerHTML = pbFull ? `
+    <div class="pb-card">
+      <div class="pb-title">PB 기록</div>
+      <div class="pb-value">${escapeHtml(pbFull.duration)}</div>
+      <div class="pb-meta">${escapeHtml(pbFull.raceName||"")} · ${escapeHtml(pbFull.date)}</div>
+    </div>
+  ` : "";
+}
+
 function saveEntry(){const kind=el("entryKind").value; const common={id:String(Date.now())+Math.random().toString(36).slice(2,7), date:el("entryDate").value, distance:el("entryDistance").value, duration:el("entryDuration").value, pace:el("entryPace").value||formatPace(el("entryDistance").value,el("entryDuration").value), shoe:el("entryShoe").value, weight:el("entryWeight").value, memo:el("entryMemo").value}; if(!common.date){alert("날짜를 입력해 주세요."); return;} if(kind==="훈련"){const item={...common, trainingType:el("entryType").value, location:el("entryTitle").value, sleepHours:el("entrySleep").value, condition:el("entryCondition").value, pain:el("entryPain").value, strength:el("entryStrength").value}; const arr=getTrainings(); arr.unshift(item); setTrainings(arr);}else{const item={...common, raceName:el("entryTitle").value, raceType:el("entryType").value, isPB:"아니오"}; const arr=getRaces(); arr.unshift(item); setRaces(dedupeRaces(arr));} resetEntryForm(); renderAll(); activateTab("records");}
 function getMergedRecords(){const trainings=getTrainings().map(v=>({...v, kind:"훈련", title:v.location||"훈련기록", type:v.trainingType})); const races=getRaces().map(v=>({...v, kind:"대회", title:v.raceName||"대회기록", type:v.raceType})); return [...trainings,...races];}
 function renderRecords(){let arr=getMergedRecords(); const filter=el("filterKind").value; const q=(el("searchBox").value||"").trim().toLowerCase(); const order=el("sortOrder").value; if(filter!=="all") arr=arr.filter(v=>v.kind===filter); if(q) arr=arr.filter(v=>[v.date,v.title,v.type,v.memo,v.location,v.raceName].join(" ").toLowerCase().includes(q)); arr.sort((a,b)=>order==="desc"?(a.date<b.date?1:-1):(a.date>b.date?1:-1)); el("recordList").innerHTML=arr.length?arr.map(v=>`<div class="record"><div class="record-head"><div><div class="record-title">${escapeHtml(v.date)} · ${escapeHtml(v.title||"")}</div><div class="badges"><span class="badge">${escapeHtml(v.kind)}</span><span class="badge">${escapeHtml(v.type||"")}</span>${v.isPB==="예"?'<span class="badge">PB</span>':''}</div><div class="meta">${v.distance?`<span>거리 ${escapeHtml(v.distance)}km</span>`:""}${v.duration?`<span>시간 ${escapeHtml(v.duration)}</span>`:""}${v.pace?`<span>페이스 ${escapeHtml(v.pace)}</span>`:""}${v.shoe?`<span>러닝화 ${escapeHtml(v.shoe)}</span>`:""}</div></div><div class="actions"><button class="ghost" onclick="openEdit('${v.kind}','${v.id}')">수정</button></div></div>${v.memo?`<p>${nl2br(escapeHtml(v.memo))}</p>`:""}</div>`).join(""):'<div class="card"><div class="notice">조건에 맞는 기록이 없습니다.</div></div>';}
-function bestRace(type){const list=getRaces().filter(v=>v.raceType===type&&parseSeconds(v.duration)>0); if(!list.length) return null; return list.sort((a,b)=>parseSeconds(a.duration)-parseSeconds(b.duration))[0]}
 function renderBars(target, rows){const max=Math.max(1,...rows.map(r=>r.value)); el(target).innerHTML=rows.length?rows.map(r=>`<div class="bar-row"><div class="bar-head"><span>${r.label}</span><span>${r.text}</span></div><div class="bar-wrap"><div class="bar-fill" style="width:${Math.max(8,(r.value/max)*100)}%"></div></div></div>`).join(""):'<div class="notice">아직 기록이 없습니다.</div>'}
-function renderStatsInfo(){const all=[...getTrainings(),...getRaces()]; const monthly={}, yearly={}; all.forEach(v=>{const d=parseFloat(v.distance)||0; if(!d) return; monthly[monthKey(v.date)]=(monthly[monthKey(v.date)]||0)+d; yearly[yearKey(v.date)]=(yearly[yearKey(v.date)]||0)+d;}); renderBars("monthlyList", Object.entries(monthly).sort((a,b)=>a[0]>b[0]?1:-1).slice(-12).map(([k,v])=>({label:k,value:v,text:`${v.toFixed(1)} km`}))); renderBars("yearlyList", Object.entries(yearly).sort((a,b)=>a[0]>b[0]?1:-1).map(([k,v])=>({label:k,value:v,text:`${v.toFixed(1)} km`}))); const pb=[]; ["풀코스","하프","10K","5K"].forEach(type=>{const best=bestRace(type); if(best) pb.push(`<p><strong>${type}</strong>: ${escapeHtml(best.duration)} · ${escapeHtml(best.raceName||"")} · ${escapeHtml(best.date)}</p>`);}); el("pbList").innerHTML=pb.length?pb.join(""):'<div class="notice">PB 기록이 아직 없습니다.</div>'; el("statsText").textContent="월별·연도별 거리와 PB를 한눈에 볼 수 있도록 정리했습니다.";}
+function renderStatsInfo(){
+  const all=[...getTrainings(),...getRaces()];
+  const monthly={}, yearly={};
+
+  all.forEach(v=>{
+    const d=parseFloat(v.distance)||0;
+    if(!d) return;
+    monthly[monthKey(v.date)] = (monthly[monthKey(v.date)]||0) + d;
+    yearly[yearKey(v.date)] = (yearly[yearKey(v.date)]||0) + d;
+  });
+
+  renderBars(
+    "monthlyList",
+    Object.entries(monthly)
+      .sort((a,b)=>a[0] < b[0] ? 1 : -1)
+      .slice(0,12)
+      .map(([k,v])=>({label:k,value:v,text:`${v.toFixed(1)} km`}))
+  );
+
+  renderBars(
+    "yearlyList",
+    Object.entries(yearly)
+      .sort((a,b)=>a[0] < b[0] ? 1 : -1)
+      .map(([k,v])=>({label:k,value:v,text:`${v.toFixed(1)} km`}))
+  );
+
+  const pb=[];
+  ["풀코스","하프","10K","5K"].forEach(type=>{
+    const best=bestRace(type);
+    if(best){
+      pb.push(`<p><strong>${type}</strong>: ${escapeHtml(best.duration)} · ${escapeHtml(best.raceName||"")} · ${escapeHtml(best.date)}</p>`);
+    }
+  });
+
+  el("pbList").innerHTML = pb.length ? pb.join("") : '<div class="notice">PB 기록이 아직 없습니다.</div>';
+  el("statsText").textContent = "월별·연도별 거리와 PB를 한눈에 볼 수 있도록 정리했습니다.";
+}
 function openEdit(kind,id){currentEdit={kind,id}; let v; if(kind==="훈련"){v=getTrainings().find(x=>x.id===id); el("editKind").value="훈련"; el("editTitle").value=v.location||""; el("editSleep").value=v.sleepHours||""; el("editCondition").value=v.condition||""; el("editPain").value=v.pain||""; el("editStrength").value=v.strength||"";}else{v=getRaces().find(x=>x.id===id); el("editKind").value="대회"; el("editTitle").value=v.raceName||""; el("editSleep").value=""; el("editCondition").value=""; el("editPain").value=""; el("editStrength").value="";} el("editDate").value=v.date||""; el("editType").value=kind==="훈련"?(v.trainingType||""):(v.raceType||""); el("editDistance").value=v.distance||""; el("editDuration").value=v.duration||""; el("editPace").value=v.pace||""; el("editShoe").value=v.shoe||""; el("editWeight").value=v.weight||""; el("editMemo").value=v.memo||""; el("editModal").classList.add("show");}
 function closeEdit(){currentEdit=null; el("editModal").classList.remove("show")}
 function saveEdit(){if(!currentEdit) return; if(currentEdit.kind==="훈련"){const arr=getTrainings(); const i=arr.findIndex(v=>v.id===currentEdit.id); if(i>=0){arr[i]={...arr[i], date:el("editDate").value, trainingType:el("editType").value, location:el("editTitle").value, distance:el("editDistance").value, duration:el("editDuration").value, pace:el("editPace").value, shoe:el("editShoe").value, weight:el("editWeight").value, sleepHours:el("editSleep").value, condition:el("editCondition").value, pain:el("editPain").value, strength:el("editStrength").value, memo:el("editMemo").value}; setTrainings(arr);}}else{const arr=getRaces(); const i=arr.findIndex(v=>v.id===currentEdit.id); if(i>=0){arr[i]={...arr[i], date:el("editDate").value, raceType:el("editType").value, raceName:el("editTitle").value, distance:el("editDistance").value, duration:el("editDuration").value, pace:el("editPace").value, shoe:el("editShoe").value, weight:el("editWeight").value, memo:el("editMemo").value}; setRaces(dedupeRaces(arr));}} closeEdit(); renderAll();}
