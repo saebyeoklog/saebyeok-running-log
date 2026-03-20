@@ -1,2 +1,78 @@
-새벽의 달리기 이야기 (정상 복구 버전)
-이 파일은 안정적으로 앱을 복구하기 위한 기본 버전입니다.
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>새벽의 달리기 이야기</title>
+
+<style>
+body{font-family:sans-serif;margin:0;background:#f5f7fb}
+.wrap{max-width:900px;margin:auto;padding:15px}
+.card{background:white;border-radius:12px;padding:15px;margin-bottom:15px}
+h1{margin:0 0 10px}
+button{padding:8px 12px;border:none;border-radius:8px;background:#111;color:white}
+.record{border-bottom:1px solid #ddd;padding:10px 0}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<div class="card">
+<h1>새벽의 달리기 이야기</h1>
+<p id="summary"></p>
+</div>
+
+<div class="card">
+<h3>기록 입력</h3>
+<input type="date" id="date"><br><br>
+<input placeholder="거리(km)" id="distance"><br><br>
+<input placeholder="시간 (예: 50:00)" id="time"><br><br>
+<button onclick="save()">저장</button>
+</div>
+
+<div class="card">
+<h3>기록 보기</h3>
+<div id="list"></div>
+</div>
+
+</div>
+
+<script>
+
+const KEY="run_log_final";
+
+function get(){
+  return JSON.parse(localStorage.getItem(KEY)||"[]");
+}
+
+function save(){
+  const data=get();
+  data.unshift({
+    date:document.getElementById("date").value,
+    distance:document.getElementById("distance").value,
+    time:document.getElementById("time").value
+  });
+  localStorage.setItem(KEY,JSON.stringify(data));
+  render();
+}
+
+function render(){
+  const data=get();
+  document.getElementById("summary").innerText=
+    "총 기록: "+data.length+"개";
+
+  document.getElementById("list").innerHTML=
+    data.map(d=>`
+      <div class="record">
+      ${d.date} | ${d.distance}km | ${d.time}
+      </div>
+    `).join("");
+}
+
+render();
+
+</script>
+
+</body>
+</html>
