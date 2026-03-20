@@ -1,79 +1,282 @@
 <!DOCTYPE html>
-
 <html lang="ko">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>새벽의 달리기 이야기</title>
-
 <style>
-body{font-family:sans-serif;margin:0;background:#f5f7fb}
-.wrap{max-width:900px;margin:auto;padding:15px}
-.card{background:white;border-radius:12px;padding:15px;margin-bottom:15px}
-h1{margin:0 0 10px}
-button{padding:8px 12px;border:none;border-radius:8px;background:#111;color:white}
-.record{border-bottom:1px solid #ddd;padding:10px 0}
+:root{
+  --bg:#f3f6fb; --bg2:#e9eff7; --card:#ffffff; --text:#18212b; --muted:#667085;
+  --line:#dde5ef; --accent:#111827; --soft:#f8fafc; --shadow:0 18px 40px rgba(15,23,42,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans KR",sans-serif;color:var(--text);background:linear-gradient(180deg,var(--bg) 0%,var(--bg2) 100%)}
+.wrap{max-width:1180px;margin:0 auto;padding:18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:18px;margin-bottom:16px}
+.hero{position:relative;overflow:hidden;border-radius:28px;padding:26px 22px;background:
+  radial-gradient(circle at top right, rgba(255,255,255,.35), rgba(255,255,255,0) 26%),
+  linear-gradient(135deg,#111827 0%,#1f2937 45%,#334155 100%);color:#fff}
+.topline{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.hero h1{margin:10px 0 8px;font-size:32px;letter-spacing:-.03em}
+.hero p{margin:0;color:rgba(255,255,255,.82);line-height:1.65}
+.mini-status{display:inline-block;border-radius:999px;padding:7px 12px;font-size:13px;font-weight:700;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18)}
+.hero-badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.hero-badge{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);padding:7px 12px;border-radius:999px;font-size:12px}
+.tools summary{list-style:none;cursor:pointer;user-select:none;font-weight:700;font-size:14px;padding:10px 12px;border-radius:14px;background:#fff;color:var(--text);border:1px solid var(--line)}
+.tools summary::-webkit-details-marker{display:none}
+.tools-body{margin-top:10px;display:flex;gap:8px;flex-wrap:wrap}
+button{border:0;border-radius:14px;padding:11px 14px;background:var(--accent);color:#fff;cursor:pointer;font-size:14px;font-weight:700}
+button.secondary{background:#fff;color:var(--text);border:1px solid var(--line)}
+button.ghost{background:var(--soft);color:var(--text);border:1px solid var(--line)}
+button.danger{background:#fff;color:#b91c1c;border:1px solid #fecaca}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px}
+.stat{background:linear-gradient(180deg,#fff,#fbfdff);border:1px solid var(--line);border-radius:22px;padding:16px}
+.stat .label{font-size:13px;color:var(--muted)}
+.stat .value{font-size:26px;font-weight:800;letter-spacing:-.03em;margin-top:8px}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.tab{border:1px solid var(--line);border-radius:16px;background:#fff;color:var(--text);padding:12px 14px;cursor:pointer;font-weight:800}
+.tab.active{background:var(--accent);color:#fff}
+.hidden{display:none}
+.grid{display:grid;gap:12px}
+.grid.cols-2{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.grid.cols-4{grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:14px;font-size:14px;background:#fff;color:var(--text)}
+textarea{min-height:110px;resize:vertical}
+.section-title{margin:0 0 12px;font-size:19px}
+.section-sub{margin:-4px 0 12px;color:var(--muted);font-size:13px}
+.record{border:1px solid var(--line);border-radius:18px;padding:14px;margin-bottom:12px;background:#fff}
+.record-head{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.record-title{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin:7px 0}
+.badge{border:1px solid var(--line);border-radius:999px;padding:4px 10px;font-size:12px;background:#f8fafc;color:#334155}
+.meta{display:flex;gap:10px 14px;flex-wrap:wrap;color:var(--muted);font-size:14px;margin-top:8px}
+.record p{margin:10px 0 0;line-height:1.6}
+.actions{display:flex;gap:8px;flex-wrap:wrap}
+.bar-row{margin-bottom:12px}
+.bar-head{display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:6px}
+.bar-wrap{height:12px;background:#edf2f7;border-radius:999px;overflow:hidden}
+.bar-fill{height:100%;background:linear-gradient(90deg,#0f172a,#334155);border-radius:999px}
+.notice{font-size:13px;color:var(--muted)}
+.modal-backdrop{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
+.modal-backdrop.show{display:flex}
+.modal{width:min(760px,100%);background:#fff;border-radius:24px;padding:18px;border:1px solid var(--line);box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+.small-row{display:flex;gap:8px;flex-wrap:wrap}
+.helper{font-size:13px;color:rgba(255,255,255,.78);margin-top:12px}
+@media (max-width:720px){.tabs{grid-template-columns:1fr}.hero h1{font-size:28px}}
 </style>
 </head>
-
 <body>
 <div class="wrap">
+  <div class="hero card">
+    <div class="topline">
+      <div>
+        <div class="mini-status" id="todayStatus">오늘 상태: 휴식</div>
+        <h1>새벽의 달리기 이야기</h1>
+        <p>기록을 넘어, 달린 시간의 이야기. 혼자 보는 앱이어도 단정하고 보기 좋게, 오래 쓰기 편한 구조로 정리한 개인 러닝 아카이브.</p>
+        <div class="hero-badges">
+          <span class="hero-badge">기록입력 통합</span>
+          <span class="hero-badge">기록 직접 수정</span>
+          <span class="hero-badge">PB 자동 계산</span>
+          <span class="hero-badge">백업 · 복원</span>
+        </div>
+      </div>
+      <details class="tools">
+        <summary>백업 · 가져오기 · 복원</summary>
+        <div class="tools-body">
+          <button class="secondary" onclick="downloadCSV()">CSV 다운로드</button>
+          <button class="secondary" onclick="downloadBackup()">백업 저장</button>
+          <button class="secondary" onclick="restoreAutoBackup()">자동백업 복원</button>
+          <button class="secondary" onclick="document.getElementById('csvImport').click()">CSV 가져오기</button>
+          <input id="csvImport" type="file" accept=".csv" class="hidden" />
+        </div>
+      </details>
+    </div>
+    <div class="helper" id="backupInfo">최근 자동백업: -</div>
+  </div>
 
-<div class="card">
-<h1>새벽의 달리기 이야기</h1>
-<p id="summary"></p>
+  <div class="stats" id="statCards"></div>
+
+  <div class="tabs">
+    <button class="tab active" data-tab="input">기록입력</button>
+    <button class="tab" data-tab="records">기록보기</button>
+    <button class="tab" data-tab="stats">통계 정보</button>
+  </div>
+
+  <div id="input" class="tab-panel">
+    <div class="card">
+      <h2 class="section-title">기록입력</h2>
+      <p class="section-sub">훈련과 대회를 같은 입력 화면에서 선택해서 기록합니다.</p>
+      <div class="grid cols-4">
+        <div><label>기록 구분</label><select id="entryKind"></select></div>
+        <div><label>날짜</label><input type="date" id="entryDate"></div>
+        <div><label>종목 / 훈련종류</label><select id="entryType"></select></div>
+        <div><label>장소 / 대회명</label><input id="entryTitle" placeholder="중랑천 또는 서울마라톤"></div>
+      </div>
+      <div class="grid cols-4" style="margin-top:12px">
+        <div><label>거리 (km)</label><input id="entryDistance" placeholder="10 또는 42.195"></div>
+        <div><label>시간 (hh:mm:ss)</label><input id="entryDuration" placeholder="0:56:20"></div>
+        <div><label>페이스</label><input id="entryPace" placeholder="자동 계산 또는 직접 입력"></div>
+        <div><label>러닝화</label><input id="entryShoe" placeholder="알파플라이 3"></div>
+      </div>
+      <div class="grid cols-4" style="margin-top:12px">
+        <div><label>체중 (kg)</label><input id="entryWeight" placeholder="69.0"></div>
+        <div><label>수면시간</label><input id="entrySleep" placeholder="6.5"></div>
+        <div><label>컨디션</label><select id="entryCondition"></select></div>
+        <div><label>통증 / 불편</label><input id="entryPain" placeholder="왼쪽 종아리"></div>
+      </div>
+      <div class="grid cols-2" style="margin-top:12px">
+        <div><label>근력운동</label><textarea id="entryStrength" placeholder="스쿼트 3×15"></textarea></div>
+        <div><label>메모</label><textarea id="entryMemo" placeholder="그날의 느낌, 함께 달린 사람, 날씨 등"></textarea></div>
+      </div>
+      <div class="small-row" style="margin-top:14px">
+        <button onclick="saveEntry()">기록 저장</button>
+        <button class="secondary" onclick="resetEntryForm()">새로 입력</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="records" class="tab-panel hidden">
+    <div class="card">
+      <h2 class="section-title">기록보기</h2>
+      <p class="section-sub">훈련과 대회를 구분해서 보고, 검색·정렬하고, 휴대폰에서도 바로 수정할 수 있습니다.</p>
+      <div class="grid cols-4">
+        <div><label>구분</label><select id="filterKind"></select></div>
+        <div><label>정렬</label><select id="sortOrder"></select></div>
+        <div><label>검색</label><input id="searchBox" placeholder="날짜, 제목, 메모 검색"></div>
+        <div><label>빠른 동작</label><button class="ghost" onclick="renderRecords()">새로고침</button></div>
+      </div>
+    </div>
+    <div id="recordList"></div>
+  </div>
+
+  <div id="stats" class="tab-panel hidden">
+    <div class="card">
+      <h2 class="section-title">통계 정보</h2>
+      <div id="statsText" class="notice"></div>
+    </div>
+    <div class="grid cols-2">
+      <div class="card">
+        <h2 class="section-title">월별 거리</h2>
+        <div id="monthlyList"></div>
+      </div>
+      <div class="card">
+        <h2 class="section-title">연도별 거리</h2>
+        <div id="yearlyList"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2 class="section-title">PB 기록</h2>
+      <div id="pbList"></div>
+    </div>
+  </div>
 </div>
 
-<div class="card">
-<h3>기록 입력</h3>
-<input type="date" id="date"><br><br>
-<input placeholder="거리(km)" id="distance"><br><br>
-<input placeholder="시간 (예: 50:00)" id="time"><br><br>
-<button onclick="save()">저장</button>
-</div>
-
-<div class="card">
-<h3>기록 보기</h3>
-<div id="list"></div>
-</div>
-
+<div class="modal-backdrop" id="editModal">
+  <div class="modal">
+    <h2 class="section-title">기록 수정</h2>
+    <div class="grid cols-4">
+      <div><label>구분</label><select id="editKind"></select></div>
+      <div><label>날짜</label><input type="date" id="editDate"></div>
+      <div><label>종목 / 훈련종류</label><input id="editType"></div>
+      <div><label>장소 / 대회명</label><input id="editTitle"></div>
+    </div>
+    <div class="grid cols-4" style="margin-top:12px">
+      <div><label>거리 (km)</label><input id="editDistance"></div>
+      <div><label>시간</label><input id="editDuration"></div>
+      <div><label>페이스</label><input id="editPace"></div>
+      <div><label>러닝화</label><input id="editShoe"></div>
+    </div>
+    <div class="grid cols-4" style="margin-top:12px">
+      <div><label>체중</label><input id="editWeight"></div>
+      <div><label>수면시간</label><input id="editSleep"></div>
+      <div><label>컨디션</label><input id="editCondition"></div>
+      <div><label>통증</label><input id="editPain"></div>
+    </div>
+    <div class="grid cols-2" style="margin-top:12px">
+      <div><label>근력운동</label><textarea id="editStrength"></textarea></div>
+      <div><label>메모</label><textarea id="editMemo"></textarea></div>
+    </div>
+    <div class="small-row" style="margin-top:14px">
+      <button onclick="saveEdit()">수정 저장</button>
+      <button class="danger" onclick="deleteEdit()">삭제</button>
+      <button class="secondary" onclick="closeEdit()">닫기</button>
+    </div>
+  </div>
 </div>
 
 <script>
+const TRAINING_KEY = "saebyeok-story-training-v17";
+const RACE_KEY = "saebyeok-story-race-v17";
+const AUTO_KEY = "saebyeok-story-autobackup-v17";
+const MIGRATION_DONE_KEY = "saebyeok-story-migration-v17-done";
+const LEGACY_TRAINING_KEYS = ["saebyeok-story-training-v16","saebyeok-story-training-v15","saebyeok-story-training-v14","saebyeok-story-training-v13"];
+const LEGACY_RACE_KEYS = ["saebyeok-story-race-v16","saebyeok-story-race-v15","saebyeok-story-race-v14","saebyeok-story-race-v13"];
+const ENTRY_KINDS = ["훈련","대회"];
+const TRAINING_TYPES = ["화달","목달","토훈","일달","개인훈련","LSD","템포런","인터벌","회복주","근력","휴식"];
+const RACE_TYPES = ["풀코스","하프","10K","5K","기타"];
+const CONDITION_TYPES = ["좋음","보통","나쁨"];
+let currentEdit = null;
 
-const KEY="run_log_final";
+function todayStr(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")}`;}
+function nowText(){const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,"0")}-${String(d.getDate()).padStart(2,"0")} ${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")}`;}
+function el(id){return document.getElementById(id);}
+function escapeHtml(s){return String(s ?? "").replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));}
+function nl2br(s){return String(s||"").replace(/\n/g,"<br>");}
+function monthKey(d){return String(d).slice(0,7);}
+function yearKey(d){return String(d).slice(0,4);}
+function parseSeconds(text){const parts=String(text||"").split(":").map(Number); if(parts.some(Number.isNaN)) return 0; if(parts.length===2) return parts[0]*60+parts[1]; if(parts.length===3) return parts[0]*3600+parts[1]*60+parts[2]; return 0;}
+function formatPace(distance,duration){const d=parseFloat(distance); const sec=parseSeconds(duration); if(!d||!sec) return ""; const p=sec/d; return `${Math.floor(p/60)}:${String(Math.round(p%60)).padStart(2,"0")}/km`;}
+function getTrainings(){try{return JSON.parse(localStorage.getItem(TRAINING_KEY)||"[]")}catch(e){return []}}
+function getRaces(){try{return JSON.parse(localStorage.getItem(RACE_KEY)||"[]")}catch(e){return []}}
+function saveAutoBackup(){localStorage.setItem(AUTO_KEY,JSON.stringify({savedAt:nowText(),trainings:getTrainings(),races:getRaces()}));renderBackupInfo()}
+function setTrainings(v){localStorage.setItem(TRAINING_KEY,JSON.stringify(v));saveAutoBackup()}
+function setRaces(v){localStorage.setItem(RACE_KEY,JSON.stringify(v));saveAutoBackup()}
+function dedupeRaces(arr){const seen=new Set(), out=[]; arr.forEach(r=>{const key=`${r.date}-${r.raceName}-${r.duration}`; if(!seen.has(key)){seen.add(key); out.push(r)}}); return out}
 
-function get(){
-  return JSON.parse(localStorage.getItem(KEY)||"[]");
+function migrateLegacyData(){
+  if(localStorage.getItem(MIGRATION_DONE_KEY)==="yes") return;
+  let trainings=getTrainings(), races=getRaces();
+  if(!trainings.length){
+    for(const k of LEGACY_TRAINING_KEYS){
+      try{const d=JSON.parse(localStorage.getItem(k)||"[]"); if(Array.isArray(d)&&d.length){trainings=d; break}}catch(e){}
+    }
+  }
+  if(!races.length){
+    for(const k of LEGACY_RACE_KEYS){
+      try{const d=JSON.parse(localStorage.getItem(k)||"[]"); if(Array.isArray(d)&&d.length){races=d; break}}catch(e){}
+    }
+  }
+  trainings=trainings.filter(t=>!(t.location==="대회" || ["풀코스","하프","10K","5K"].includes(t.trainingType)));
+  races=dedupeRaces(races);
+  localStorage.setItem(TRAINING_KEY, JSON.stringify(trainings));
+  localStorage.setItem(RACE_KEY, JSON.stringify(races));
+  localStorage.setItem(MIGRATION_DONE_KEY, "yes");
 }
-
-function save(){
-  const data=get();
-  data.unshift({
-    date:document.getElementById("date").value,
-    distance:document.getElementById("distance").value,
-    time:document.getElementById("time").value
-  });
-  localStorage.setItem(KEY,JSON.stringify(data));
-  render();
-}
-
-function render(){
-  const data=get();
-  document.getElementById("summary").innerText=
-    "총 기록: "+data.length+"개";
-
-  document.getElementById("list").innerHTML=
-    data.map(d=>`
-      <div class="record">
-      ${d.date} | ${d.distance}km | ${d.time}
-      </div>
-    `).join("");
-}
-
-render();
-
+function renderBackupInfo(){try{const b=JSON.parse(localStorage.getItem(AUTO_KEY)||""); el("backupInfo").textContent=b?.savedAt?`최근 자동백업: ${b.savedAt}`:"최근 자동백업이 아직 없습니다.";}catch(e){el("backupInfo").textContent="최근 자동백업이 아직 없습니다."}}
+function downloadBackup(){const payload={savedAt:nowText(), trainings:getTrainings(), races:getRaces()}; const blob=new Blob([JSON.stringify(payload,null,2)],{type:"application/json"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`saebyeok-story-backup-${todayStr()}.json`; a.click(); URL.revokeObjectURL(url);}
+function restoreAutoBackup(){try{const b=JSON.parse(localStorage.getItem(AUTO_KEY)||""); if(!b||!Array.isArray(b.trainings)||!Array.isArray(b.races)){alert("자동백업이 없습니다."); return;} setTrainings(b.trainings); setRaces(dedupeRaces(b.races)); renderAll(); alert("자동백업을 복원했습니다.");}catch(e){alert("자동백업이 없습니다.")}}
+function fillOptions(){ENTRY_KINDS.forEach(v=>{let o1=document.createElement("option");o1.value=v;o1.textContent=v;el("entryKind").appendChild(o1); let o2=document.createElement("option");o2.value=v;o2.textContent=v;el("editKind").appendChild(o2);}); CONDITION_TYPES.forEach(v=>{let o=document.createElement("option");o.value=v;o.textContent=v;el("entryCondition").appendChild(o);}); el("filterKind").innerHTML='<option value="all">전체</option><option value="훈련">훈련</option><option value="대회">대회</option>'; el("sortOrder").innerHTML='<option value="desc">최신순</option><option value="asc">오래된순</option>'; updateEntryTypeOptions();}
+function updateEntryTypeOptions(){const target=el("entryType"); target.innerHTML=""; const items=(el("entryKind").value||"훈련")==="대회"?RACE_TYPES:TRAINING_TYPES; items.forEach(v=>{let o=document.createElement("option");o.value=v;o.textContent=v;target.appendChild(o);});}
+function resetEntryForm(){el("entryKind").value="훈련"; updateEntryTypeOptions(); el("entryDate").value=todayStr(); el("entryType").value="개인훈련"; el("entryTitle").value=""; el("entryDistance").value=""; el("entryDuration").value=""; el("entryPace").value=""; el("entryShoe").value=""; el("entryWeight").value=""; el("entrySleep").value=""; el("entryCondition").value="보통"; el("entryPain").value=""; el("entryStrength").value=""; el("entryMemo").value="";}
+function computeTodayStatus(){const today=todayStr(); const trainings=getTrainings().filter(v=>v.date===today); const races=getRaces().filter(v=>v.date===today); let hasRun=false, hasStrength=false; trainings.forEach(v=>{if(parseFloat(v.distance)>0) hasRun=true; if((v.strength||"").trim()||v.trainingType==="근력") hasStrength=true;}); races.forEach(v=>{if(parseFloat(v.distance)>0) hasRun=true;}); if(hasRun&&hasStrength) return "오늘 상태: 운동 · 러닝 + 근력"; if(hasRun) return "오늘 상태: 운동 · 러닝"; if(hasStrength) return "오늘 상태: 운동 · 근력"; return "오늘 상태: 휴식";}
+function renderTopStats(){const trainings=getTrainings(), races=getRaces(); const all=[...trainings,...races].map(v=>parseFloat(v.distance)||0); const total=all.reduce((a,b)=>a+b,0); const now=todayStr(); const month=[...trainings,...races].filter(v=>monthKey(v.date)===monthKey(now)).reduce((s,v)=>s+(parseFloat(v.distance)||0),0); const year=[...trainings,...races].filter(v=>yearKey(v.date)===yearKey(now)).reduce((s,v)=>s+(parseFloat(v.distance)||0),0); const full=races.filter(v=>v.raceType==="풀코스").length; el("todayStatus").textContent=computeTodayStatus(); el("statCards").innerHTML=`<div class="stat"><div class="label">이번 달 거리</div><div class="value">${month.toFixed(1)} km</div></div><div class="stat"><div class="label">연간 거리</div><div class="value">${year.toFixed(1)} km</div></div><div class="stat"><div class="label">누적 거리</div><div class="value">${total.toFixed(1)} km</div></div><div class="stat"><div class="label">대회 기록 수</div><div class="value">Full ${full}</div></div>`;}
+function saveEntry(){const kind=el("entryKind").value; const common={id:String(Date.now())+Math.random().toString(36).slice(2,7), date:el("entryDate").value, distance:el("entryDistance").value, duration:el("entryDuration").value, pace:el("entryPace").value||formatPace(el("entryDistance").value,el("entryDuration").value), shoe:el("entryShoe").value, weight:el("entryWeight").value, memo:el("entryMemo").value}; if(!common.date){alert("날짜를 입력해 주세요."); return;} if(kind==="훈련"){const item={...common, trainingType:el("entryType").value, location:el("entryTitle").value, sleepHours:el("entrySleep").value, condition:el("entryCondition").value, pain:el("entryPain").value, strength:el("entryStrength").value}; const arr=getTrainings(); arr.unshift(item); setTrainings(arr);}else{const item={...common, raceName:el("entryTitle").value, raceType:el("entryType").value, isPB:"아니오"}; const arr=getRaces(); arr.unshift(item); setRaces(dedupeRaces(arr));} resetEntryForm(); renderAll(); activateTab("records");}
+function getMergedRecords(){const trainings=getTrainings().map(v=>({...v, kind:"훈련", title:v.location||"훈련기록", type:v.trainingType})); const races=getRaces().map(v=>({...v, kind:"대회", title:v.raceName||"대회기록", type:v.raceType})); return [...trainings,...races];}
+function renderRecords(){let arr=getMergedRecords(); const filter=el("filterKind").value; const q=(el("searchBox").value||"").trim().toLowerCase(); const order=el("sortOrder").value; if(filter!=="all") arr=arr.filter(v=>v.kind===filter); if(q) arr=arr.filter(v=>[v.date,v.title,v.type,v.memo,v.location,v.raceName].join(" ").toLowerCase().includes(q)); arr.sort((a,b)=>order==="desc"?(a.date<b.date?1:-1):(a.date>b.date?1:-1)); el("recordList").innerHTML=arr.length?arr.map(v=>`<div class="record"><div class="record-head"><div><div class="record-title">${escapeHtml(v.date)} · ${escapeHtml(v.title||"")}</div><div class="badges"><span class="badge">${escapeHtml(v.kind)}</span><span class="badge">${escapeHtml(v.type||"")}</span>${v.isPB==="예"?'<span class="badge">PB</span>':''}</div><div class="meta">${v.distance?`<span>거리 ${escapeHtml(v.distance)}km</span>`:""}${v.duration?`<span>시간 ${escapeHtml(v.duration)}</span>`:""}${v.pace?`<span>페이스 ${escapeHtml(v.pace)}</span>`:""}${v.shoe?`<span>러닝화 ${escapeHtml(v.shoe)}</span>`:""}</div></div><div class="actions"><button class="ghost" onclick="openEdit('${v.kind}','${v.id}')">수정</button></div></div>${v.memo?`<p>${nl2br(escapeHtml(v.memo))}</p>`:""}</div>`).join(""):'<div class="card"><div class="notice">조건에 맞는 기록이 없습니다.</div></div>';}
+function bestRace(type){const list=getRaces().filter(v=>v.raceType===type&&parseSeconds(v.duration)>0); if(!list.length) return null; return list.sort((a,b)=>parseSeconds(a.duration)-parseSeconds(b.duration))[0]}
+function renderBars(target, rows){const max=Math.max(1,...rows.map(r=>r.value)); el(target).innerHTML=rows.length?rows.map(r=>`<div class="bar-row"><div class="bar-head"><span>${r.label}</span><span>${r.text}</span></div><div class="bar-wrap"><div class="bar-fill" style="width:${Math.max(8,(r.value/max)*100)}%"></div></div></div>`).join(""):'<div class="notice">아직 기록이 없습니다.</div>'}
+function renderStatsInfo(){const all=[...getTrainings(),...getRaces()]; const monthly={}, yearly={}; all.forEach(v=>{const d=parseFloat(v.distance)||0; if(!d) return; monthly[monthKey(v.date)]=(monthly[monthKey(v.date)]||0)+d; yearly[yearKey(v.date)]=(yearly[yearKey(v.date)]||0)+d;}); renderBars("monthlyList", Object.entries(monthly).sort((a,b)=>a[0]>b[0]?1:-1).slice(-12).map(([k,v])=>({label:k,value:v,text:`${v.toFixed(1)} km`}))); renderBars("yearlyList", Object.entries(yearly).sort((a,b)=>a[0]>b[0]?1:-1).map(([k,v])=>({label:k,value:v,text:`${v.toFixed(1)} km`}))); const pb=[]; ["풀코스","하프","10K","5K"].forEach(type=>{const best=bestRace(type); if(best) pb.push(`<p><strong>${type}</strong>: ${escapeHtml(best.duration)} · ${escapeHtml(best.raceName||"")} · ${escapeHtml(best.date)}</p>`);}); el("pbList").innerHTML=pb.length?pb.join(""):'<div class="notice">PB 기록이 아직 없습니다.</div>'; el("statsText").textContent="월별·연도별 거리와 PB를 한눈에 볼 수 있도록 정리했습니다.";}
+function openEdit(kind,id){currentEdit={kind,id}; let v; if(kind==="훈련"){v=getTrainings().find(x=>x.id===id); el("editKind").value="훈련"; el("editTitle").value=v.location||""; el("editSleep").value=v.sleepHours||""; el("editCondition").value=v.condition||""; el("editPain").value=v.pain||""; el("editStrength").value=v.strength||"";}else{v=getRaces().find(x=>x.id===id); el("editKind").value="대회"; el("editTitle").value=v.raceName||""; el("editSleep").value=""; el("editCondition").value=""; el("editPain").value=""; el("editStrength").value="";} el("editDate").value=v.date||""; el("editType").value=kind==="훈련"?(v.trainingType||""):(v.raceType||""); el("editDistance").value=v.distance||""; el("editDuration").value=v.duration||""; el("editPace").value=v.pace||""; el("editShoe").value=v.shoe||""; el("editWeight").value=v.weight||""; el("editMemo").value=v.memo||""; el("editModal").classList.add("show");}
+function closeEdit(){currentEdit=null; el("editModal").classList.remove("show")}
+function saveEdit(){if(!currentEdit) return; if(currentEdit.kind==="훈련"){const arr=getTrainings(); const i=arr.findIndex(v=>v.id===currentEdit.id); if(i>=0){arr[i]={...arr[i], date:el("editDate").value, trainingType:el("editType").value, location:el("editTitle").value, distance:el("editDistance").value, duration:el("editDuration").value, pace:el("editPace").value, shoe:el("editShoe").value, weight:el("editWeight").value, sleepHours:el("editSleep").value, condition:el("editCondition").value, pain:el("editPain").value, strength:el("editStrength").value, memo:el("editMemo").value}; setTrainings(arr);}}else{const arr=getRaces(); const i=arr.findIndex(v=>v.id===currentEdit.id); if(i>=0){arr[i]={...arr[i], date:el("editDate").value, raceType:el("editType").value, raceName:el("editTitle").value, distance:el("editDistance").value, duration:el("editDuration").value, pace:el("editPace").value, shoe:el("editShoe").value, weight:el("editWeight").value, memo:el("editMemo").value}; setRaces(dedupeRaces(arr));}} closeEdit(); renderAll();}
+function deleteEdit(){if(!currentEdit) return; if(currentEdit.kind==="훈련") setTrainings(getTrainings().filter(v=>v.id!==currentEdit.id)); else setRaces(getRaces().filter(v=>v.id!==currentEdit.id)); closeEdit(); renderAll();}
+function activateTab(name){document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.tab===name)); document.querySelectorAll(".tab-panel").forEach(p=>p.classList.toggle("hidden",p.id!==name));}
+function downloadCSV(){const trainings=getTrainings().map(v=>["훈련",v.date,v.trainingType,v.location||"",v.distance||"",v.duration||"",v.pace||"",v.shoe||"",v.weight||"",v.sleepHours||"",v.memo||"",v.strength||""]); const races=getRaces().map(v=>["대회",v.date,v.raceType,v.raceName||"",v.distance||"",v.duration||"",v.pace||"",v.shoe||"",v.weight||"",v.isPB||"",v.memo||"",""]); const rows=[["구분","날짜","종류","장소/대회명","거리","시간/기록","페이스","러닝화","체중","추가정보","메모","근력운동"],...trainings,...races]; const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n"); const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"}); const url=URL.createObjectURL(blob); const a=document.createElement("a"); a.href=url; a.download=`saebyeok-story-${todayStr()}.csv`; a.click(); URL.revokeObjectURL(url);}
+function parseCsvLine(line){const result=[]; let current="", inQuotes=false; for(let i=0;i<line.length;i++){const ch=line[i], next=line[i+1]; if(ch=='"'&&inQuotes&&next=='"'){current+='"'; i++;} else if(ch=='"'){inQuotes=!inQuotes;} else if(ch==","&&!inQuotes){result.push(current); current="";} else current+=ch;} result.push(current); return result}
+function importCSVText(text){const lines=text.trim().split(/\r?\n/); if(lines.length<2){alert("CSV 내용이 없습니다."); return;} const rows=lines.map(parseCsvLine); const header=rows.shift(); const newTrainings=[], newRaces=[]; const hasTypeColumn=header[0]==="구분"; rows.forEach(r=>{if(hasTypeColumn){if((r[0]||"")==="훈련"){newTrainings.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[1]||"",trainingType:r[2]||"개인훈련",location:r[3]||"",distance:r[4]||"",duration:r[5]||"",pace:r[6]||"",shoe:r[7]||"",weight:r[8]||"",sleepHours:r[9]||"",memo:r[10]||"",strength:r[11]||"",condition:"보통",pain:""});} else if((r[0]||"")==="대회"){newRaces.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[1]||"",raceType:r[2]||"풀코스",raceName:r[3]||"",distance:r[4]||"",duration:r[5]||"",pace:r[6]||"",shoe:r[7]||"",weight:r[8]||"",isPB:r[9]||"아니오",memo:r[10]||""});}}else{const place=r[3]||"", subtype=r[4]||"개인훈련", distance=r[5]||"", duration=r[6]||"", memo=r[12]||""; if(place==="대회" || ["풀코스","하프","10K","5K"].includes(subtype)){const title=memo.includes("/")?memo.split("/")[0].trim():"대회기록"; newRaces.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[0]||"",raceType:subtype||"풀코스",raceName:title,distance:distance,duration:duration,pace:r[7]||"",shoe:r[11]||"",weight:r[1]||"",isPB:memo.includes("PB")?"예":"아니오",memo:memo});} else {newTrainings.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[0]||"",weight:r[1]||"",sleepHours:r[2]||"",location:r[3]||"",trainingType:subtype,distance:distance,duration:duration,pace:r[7]||"",strength:r[8]||"",condition:r[9]||"보통",pain:r[10]||"",shoe:r[11]||"",memo:memo});}}}); if(newRaces.length) setRaces(dedupeRaces([...newRaces,...getRaces()])); if(newTrainings.length){const cleaned=newTrainings.filter(t=>!(t.location==="대회" || ["풀코스","하프","10K","5K"].includes(t.trainingType))); setTrainings([...cleaned,...getTrainings()]);} renderAll(); alert(`가져오기 완료: 훈련 ${newTrainings.length}개, 대회 ${newRaces.length}개`);}
+function renderAll(){renderTopStats(); renderRecords(); renderStatsInfo(); renderBackupInfo()}
+document.addEventListener("DOMContentLoaded",()=>{migrateLegacyData(); fillOptions(); resetEntryForm(); renderAll(); document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>activateTab(btn.dataset.tab))); el("entryKind").addEventListener("change",updateEntryTypeOptions); el("entryDistance").addEventListener("input",()=>{const p=formatPace(el("entryDistance").value,el("entryDuration").value); if(p) el("entryPace").value=p;}); el("entryDuration").addEventListener("input",()=>{const p=formatPace(el("entryDistance").value,el("entryDuration").value); if(p) el("entryPace").value=p;}); el("filterKind").addEventListener("change",renderRecords); el("sortOrder").addEventListener("change",renderRecords); el("searchBox").addEventListener("input",renderRecords); el("csvImport").addEventListener("change",e=>{const f=e.target.files[0]; if(!f) return; f.text().then(importCSVText); e.target.value="";}); saveAutoBackup();});
 </script>
-
 </body>
 </html>
