@@ -349,7 +349,72 @@ function saveEntry(){const kind=el("entryKind").value; const common={id:String(D
 function getMergedRecords(){const trainings=getTrainings().map(v=>({...v, kind:"훈련", title:v.location||"훈련기록", type:v.trainingType})); const races=getRaces().map(v=>({...v, kind:"대회", title:v.raceName||"대회기록", type:v.raceType})); return [...trainings,...races];}
 function renderRecords(){let arr=getMergedRecords(); const filter=el("filterKind").value; const q=(el("searchBox").value||"").trim().toLowerCase(); const order=el("sortOrder").value; if(filter!=="all") arr=arr.filter(v=>v.kind===filter); if(q) arr=arr.filter(v=>[v.date,v.title,v.type,v.memo,v.location,v.raceName].join(" ").toLowerCase().includes(q)); arr.sort((a,b)=>order==="desc"?(a.date<b.date?1:-1):(a.date>b.date?1:-1)); el("recordList").innerHTML=arr.length?arr.map(v=>`<div class="record"><div class="record-head"><div><div class="record-title">${escapeHtml(v.date)} · ${escapeHtml(v.title||"")}</div><div class="badges"><span class="badge">${escapeHtml(v.kind)}</span><span class="badge">${escapeHtml(v.type||"")}</span>${v.isPB==="예"?'<span class="badge">PB</span>':''}</div><div class="meta">${v.distance?`<span>거리 ${escapeHtml(v.distance)}km</span>`:""}${v.duration?`<span>시간 ${escapeHtml(v.duration)}</span>`:""}${v.pace?`<span>페이스 ${escapeHtml(v.pace)}</span>`:""}${v.shoe?`<span>러닝화 ${escapeHtml(v.shoe)}</span>`:""}</div></div><div class="actions"><button class="ghost" onclick="openEdit('${v.kind}','${v.id}')">수정</button></div></div>${v.memo?`<p>${nl2br(escapeHtml(v.memo))}</p>`:""}</div>`).join(""):'<div class="card"><div class="notice">조건에 맞는 기록이 없습니다.</div></div>';}
 function renderBars(target, rows){const max=Math.max(1,...rows.map(r=>r.value)); el(target).innerHTML=rows.length?rows.map(r=>`<div class="bar-row"><div class="bar-head"><span>${r.label}</span><span>${r.text}</span></div><div class="bar-wrap"><div class="bar-fill" style="width:${Math.max(8,(r.value/max)*100)}%"></div></div></div>`).join(""):'<div class="notice">아직 기록이 없습니다.</div>'}
-function renderStatsInfo(){
+function renderMonthlyRunCalendar(records) {
+  const calendarEl = document.getElementById("monthlyRunCalendar");
+  if (!calendarEl) return;
+
+  if (!Array.isArray(records) || records.length === 0) {
+    calendarEl.innerHTML = "<div class='notice'>이번 달 기록이 없습니다.</div>";
+    return;
+  }
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+
+  const monthRecords = records.filter(record => {
+    if (!record.date) return false;
+    const d = new Date(record.date);
+    return d.getFullYear() === year && d.getMonth() === month;
+  });
+
+  const runDaysMap = {};
+
+  monthRecords.forEach(record => {
+    const d = new Date(record.date);
+    const day = d.getDate();
+
+    if (!runDaysMap[day]) {
+      runDaysMap[day] = 0;
+    }
+
+    runDaysMap[day] += Number(record.distance || 0);
+  });
+
+  const firstDay = new Date(year, month, 1).getDay();
+  const lastDate = new Date(year, month + 1, 0).getDate();
+
+  const weekNames = ["일", "월", "화", "수", "목", "금", "토"];
+
+  let html = "";
+
+  weekNames.forEach(name => {
+    html += `<div class="calendar-weekday">${name}</div>`;
+  });
+
+  for (let i = 0; i < firstDay; i++) {
+    html += `<div class="empty-day"></div>`;
+  }
+
+  for (let day = 1; day <= lastDate; day++) {
+    if (runDaysMap[day]) {
+      const dist = runDaysMap[day];
+      html += `
+        <div class="run-day has-run">
+          <div>
+            ${day}
+            <small>${dist.toFixed(1)}km</small>
+          </div>
+        </div>
+      `;
+    } else {
+      html += `<div class="run-day">${day}</div>`;
+    }
+  }
+
+  calendarEl.innerHTML = html;
+}
+  function renderStatsInfo(){
   const all=[...getTrainings(),...getRaces()];
   const monthly={}, yearly={};
   all.forEach(v=>{const d=parseFloat(v.distance)||0; if(!d) return; monthly[monthKey(v.date)] = (monthly[monthKey(v.date)]||0) + d; yearly[yearKey(v.date)] = (yearly[yearKey(v.date)]||0) + d;});
