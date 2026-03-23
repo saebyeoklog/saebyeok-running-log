@@ -423,6 +423,7 @@ function renderMonthlyRunCalendar(records) {
   const pb=[]; ["풀코스","하프","10K","5K"].forEach(type=>{const best=bestRace(type); if(best){pb.push(`<p><strong>${type}</strong>: ${escapeHtml(best.duration)} · ${escapeHtml(best.raceName||"")} · ${escapeHtml(best.date)}</p>`);}});
   el("pbList").innerHTML = pb.length ? pb.join("") : '<div class="notice">PB 기록이 아직 없습니다.</div>';
   el("statsText").textContent = "월별·연도별 거리와 PB를 한눈에 볼 수 있도록 정리했습니다.";
+  renderMonthlyRunCalendar(all);
 }
 function openEdit(kind,id){currentEdit={kind,id}; let v; if(kind==="훈련"){v=getTrainings().find(x=>x.id===id); el("editKind").value="훈련"; el("editTitle").value=v.location||""; el("editSleep").value=v.sleepHours||""; el("editCondition").value=v.condition||""; el("editPain").value=v.pain||""; el("editStrength").value=v.strength||"";}else{v=getRaces().find(x=>x.id===id); el("editKind").value="대회"; el("editTitle").value=v.raceName||""; el("editSleep").value=""; el("editCondition").value=""; el("editPain").value=""; el("editStrength").value="";} el("editDate").value=v.date||""; el("editType").value=kind==="훈련"?(v.trainingType||""):(v.raceType||""); el("editDistance").value=v.distance||""; el("editDuration").value=v.duration||""; el("editPace").value=v.pace||""; el("editShoe").value=v.shoe||""; el("editWeight").value=v.weight||""; el("editMemo").value=v.memo||""; el("editModal").classList.add("show");}
 function closeEdit(){currentEdit=null; el("editModal").classList.remove("show")}
