@@ -499,6 +499,51 @@ function renderMonthlyRunCalendar(records) {
 
   calendarEl.innerHTML = html;
 }
+  function parseDurationToSeconds(value){
+  if(!value) return 0;
+  const text = String(value).trim();
+  if(!text) return 0;
+
+  const parts = text.split(":").map(v => v.trim());
+  if(parts.some(v => v === "" || isNaN(v))) return 0;
+
+  if(parts.length === 3){
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    const s = parseInt(parts[2], 10) || 0;
+    return h * 3600 + m * 60 + s;
+  }
+
+  if(parts.length === 2){
+    const m = parseInt(parts[0], 10) || 0;
+    const s = parseInt(parts[1], 10) || 0;
+    return m * 60 + s;
+  }
+
+  return 0;
+}
+
+function formatPace(distance, duration){
+  const d = parseFloat(distance);
+  const sec = parseDurationToSeconds(duration);
+
+  if(!d || d <= 0 || !sec || sec <= 0) return "";
+
+  const paceSec = Math.round(sec / d);
+  const min = Math.floor(paceSec / 60);
+  const rem = paceSec % 60;
+
+  return `${min}:${String(rem).padStart(2,"0")}/km`;
+}
+
+function updateEntryPaceAuto(){
+  const distanceEl = el("entryDistance");
+  const durationEl = el("entryDuration");
+  const paceEl = el("entryPace");
+  if(!distanceEl || !durationEl || !paceEl) return;
+
+  paceEl.value = formatPace(distanceEl.value, durationEl.value);
+}
   function renderStatsInfo(){
   const all=[...getTrainings(),...getRaces()];
   const monthly={}, yearly={};
@@ -519,7 +564,33 @@ function downloadCSV(){const trainings=getTrainings().map(v=>["훈련",v.date,v.
 function parseCsvLine(line){const result=[]; let current="", inQuotes=false; for(let i=0;i<line.length;i++){const ch=line[i], next=line[i+1]; if(ch=='"'&&inQuotes&&next=='"'){current+='"'; i++;} else if(ch=='"'){inQuotes=!inQuotes;} else if(ch==","&&!inQuotes){result.push(current); current="";} else current+=ch;} result.push(current); return result}
 function importCSVText(text){const lines=text.trim().split(/\r?\n/); if(lines.length<2){alert("CSV 내용이 없습니다."); return;} const rows=lines.map(parseCsvLine); const header=rows.shift(); const newTrainings=[], newRaces=[]; const hasTypeColumn=header[0]==="구분"; rows.forEach(r=>{if(hasTypeColumn){if((r[0]||"")==="훈련"){newTrainings.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[1]||"",trainingType:r[2]||"개인훈련",location:r[3]||"",distance:r[4]||"",duration:r[5]||"",pace:r[6]||"",shoe:r[7]||"",weight:r[8]||"",sleepHours:r[9]||"",memo:r[10]||"",strength:r[11]||"",condition:"보통",pain:""});} else if((r[0]||"")==="대회"){newRaces.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[1]||"",raceType:r[2]||"풀코스",raceName:r[3]||"",distance:r[4]||"",duration:r[5]||"",pace:r[6]||"",shoe:r[7]||"",weight:r[8]||"",isPB:r[9]||"아니오",memo:r[10]||""});}}else{const place=r[3]||"", subtype=r[4]||"개인훈련", distance=r[5]||"", duration=r[6]||"", memo=r[12]||""; if(place==="대회" || ["풀코스","하프","10K","5K"].includes(subtype)){const title=memo.includes("/")?memo.split("/")[0].trim():"대회기록"; newRaces.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[0]||"",raceType:subtype||"풀코스",raceName:title,distance:distance,duration:duration,pace:r[7]||"",shoe:r[11]||"",weight:r[1]||"",isPB:memo.includes("PB")?"예":"아니오",memo:memo});} else {newTrainings.push({id:String(Date.now())+Math.random().toString(36).slice(2,8),date:r[0]||"",weight:r[1]||"",sleepHours:r[2]||"",location:r[3]||"",trainingType:subtype,distance:distance,duration:duration,pace:r[7]||"",strength:r[8]||"",condition:r[9]||"보통",pain:r[10]||"",shoe:r[11]||"",memo:memo});}}}); if(newRaces.length) setRaces(dedupeRaces([...newRaces,...getRaces()])); if(newTrainings.length){const cleaned=newTrainings.filter(t=>!(t.location==="대회" || ["풀코스","하프","10K","5K"].includes(t.trainingType))); setTrainings([...cleaned,...getTrainings()]);} renderAll(); alert(`가져오기 완료: 훈련 ${newTrainings.length}개, 대회 ${newRaces.length}개`);}
 function renderAll(){renderTopStats(); renderRecords(); renderStatsInfo(); renderBackupInfo()}
-document.addEventListener("DOMContentLoaded",()=>{migrateLegacyData(); fillOptions(); resetEntryForm(); renderAll(); document.querySelectorAll(".tab").forEach(btn=>btn.addEventListener("click",()=>activateTab(btn.dataset.tab))); el("entryKind").addEventListener("change",updateEntryTypeOptions); el("entryDistance").addEventListener("input", updateEntryPaceAuto);
+document.addEventListener("DOMContentLoaded",()=>{
+  migrateLegacyData();
+  fillOptions();
+  resetEntryForm();
+  renderAll();
+
+  document.querySelectorAll(".tab").forEach(btn =>
+    btn.addEventListener("click",()=>activateTab(btn.dataset.tab))
+  );
+
+  el("entryKind").addEventListener("change", updateEntryTypeOptions);
+  el("entryDistance").addEventListener("input", updateEntryPaceAuto);
+  el("entryDuration").addEventListener("input", updateEntryPaceAuto);
+
+  el("filterKind").addEventListener("change", renderRecords);
+  el("sortOrder").addEventListener("change", renderRecords);
+  el("searchBox").addEventListener("input", renderRecords);
+
+  el("csvImport").addEventListener("change", e=>{
+    const f = e.target.files[0];
+    if(!f) return;
+    f.text().then(importCSVText);
+    e.target.value = "";
+  });
+
+  saveAutoBackup();
+});
 el("entryDuration").addEventListener("input", updateEntryPaceAuto); el("filterKind").addEventListener("change",renderRecords); el("sortOrder").addEventListener("change",renderRecords); el("searchBox").addEventListener("input",renderRecords); el("csvImport").addEventListener("change",e=>{const f=e.target.files[0]; if(!f) return; f.text().then(importCSVText); e.target.value="";}); saveAutoBackup();});
 </script>
 </body>
