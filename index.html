@@ -577,7 +577,13 @@ document.addEventListener("DOMContentLoaded",()=>{
   el("entryKind").addEventListener("change", updateEntryTypeOptions);
   el("entryDistance").addEventListener("input", updateEntryPaceAuto);
   el("entryDuration").addEventListener("input", updateEntryPaceAuto);
+el("editDistance").addEventListener("input", ()=>{
+  el("editPace").value = formatPace(el("editDistance").value, el("editDuration").value);
+});
 
+el("editDuration").addEventListener("input", ()=>{
+  el("editPace").value = formatPace(el("editDistance").value, el("editDuration").value);
+});
   el("filterKind").addEventListener("change", renderRecords);
   el("sortOrder").addEventListener("change", renderRecords);
   el("searchBox").addEventListener("input", renderRecords);
