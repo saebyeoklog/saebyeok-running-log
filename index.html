@@ -295,7 +295,48 @@ function nl2br(s){return String(s||"").replace(/\n/g,"<br>");}
 function monthKey(d){return String(d).slice(0,7);}
 function yearKey(d){return String(d).slice(0,4);}
 function parseSeconds(text){const parts=String(text||"").split(":").map(Number); if(parts.some(Number.isNaN)) return 0; if(parts.length===2) return parts[0]*60+parts[1]; if(parts.length===3) return parts[0]*3600+parts[1]*60+parts[2]; return 0;}
-function formatPace(distance,duration){const d=parseFloat(distance); const sec=parseSeconds(duration); if(!d||!sec) return ""; const p=sec/d; return `${Math.floor(p/60)}:${String(Math.round(p%60)).padStart(2,"0")}/km`;}
+function parseDurationToSeconds(value){
+  if(!value) return 0;
+
+  const text = String(value).trim();
+  if(!text) return 0;
+
+  const parts = text.split(":").map(v=>v.trim()).filter(Boolean);
+  if(parts.some(v => isNaN(v))) return 0;
+
+  if(parts.length === 3){
+    const h = parseInt(parts[0], 10) || 0;
+    const m = parseInt(parts[1], 10) || 0;
+    const s = parseInt(parts[2], 10) || 0;
+    return h * 3600 + m * 60 + s;
+  }
+
+  if(parts.length === 2){
+    const m = parseInt(parts[0], 10) || 0;
+    const s = parseInt(parts[1], 10) || 0;
+    return m * 60 + s;
+  }
+
+  if(parts.length === 1){
+    const n = parseInt(parts[0], 10) || 0;
+    return n;
+  }
+
+  return 0;
+}
+
+function formatPace(distance, duration){
+  const dist = parseFloat(distance);
+  const totalSeconds = parseDurationToSeconds(duration);
+
+  if(!dist || dist <= 0 || !totalSeconds || totalSeconds <= 0) return "";
+
+  const paceSeconds = Math.round(totalSeconds / dist);
+  const paceMin = Math.floor(paceSeconds / 60);
+  const paceSec = paceSeconds % 60;
+
+  return `${paceMin}:${String(paceSec).padStart(2,"0")}/km`;
+}
 function getTrainings(){try{return JSON.parse(localStorage.getItem(TRAINING_KEY)||"[]")}catch(e){return []}}
 function getRaces(){try{return JSON.parse(localStorage.getItem(RACE_KEY)||"[]")}catch(e){return []}}
 function saveAutoBackup(){localStorage.setItem(AUTO_KEY,JSON.stringify({savedAt:nowText(),trainings:getTrainings(),races:getRaces()}));renderBackupInfo()}
